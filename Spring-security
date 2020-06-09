@@ -1,0 +1,207 @@
+Step 1: Add dependency for Spring Security
+	
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		
+Step 2: Enable web security
+		
+		You have to define below annotation in your spring boot main class file.
+		
+			@EnableWebSecurity
+		
+Step 3: Provide Users: There are many ways to define users, they are given below.
+
+	1. By just adding above dependency, by default a user with name "user" and auto generated random password will be configured.
+	
+	2. Or you can define your own username and password by providing below properties in application.yml file.
+	
+			spring:
+			  security:
+				user:
+				  name: safdar
+				  password: safdar
+				  
+	3. Or you can define in-memory user. To do so below is the steps.
+	
+		a. Create a simple Java file and annotate it with @Configuration and extend this class by WebSecurityConfigurerAdapter class.
+		
+		b. Override the "configure" method with input parameter AuthenticationManagerBuilder class.
+		
+		c. Example: 
+			
+			@Configuration
+			public class WebConfig extends WebSecurityConfigurerAdapter {
+				
+				@Override
+				protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+					auth.inMemoryAuthentication().withUser("safdar").password("{noop}safdar").roles("USER");
+				}
+				
+			}
+			
+	4. Or you can connect with Database. To do so below is the step.
+	
+		a. First of all create a CustomUserDetailsService by extending UserDetailsService class.
+		
+		b. Override the UserDetailsService class method named "loadUserByUsername" in your CustomUserDetailsService class.
+
+		c. In this overriden method fetch user by username from database and return a CustomUserDetails class object.
+		
+		d. All above discussed example is given below.
+				
+				@Service
+				public class CustomUserDetailsService implements UserDetailsService {
+
+					@Autowired
+					private UserRepository userRepository;
+					
+					@Override
+					public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+						
+						Optional<User> optionalUser = userRepository.findByUsername(username);
+						
+						if(optionalUser.isPresent()) {
+							User user = optionalUser.get();
+							CustomUserDetails customUserDetails = new CustomUserDetails();
+							customUserDetails.setUser(user);
+							return customUserDetails;
+						}
+						else {
+							throw new UsernameNotFoundException("user not found!");
+						}
+					}
+				}
+		
+		d. To get CustomUserDetails class object you need to create this class by implementing UserDetails class. You have to override the methods from UserDetails class as well. Example is given below.
+		
+			public class CustomUserDetails implements UserDetails {
+
+				private static final long serialVersionUID = 1L;
+				
+				private User user;
+
+				public User getUser() {
+					return user;
+				}
+
+				public void setUser(User user) {
+					this.user = user;
+				}
+
+				@Override
+				public Collection<? extends GrantedAuthority> getAuthorities() {
+					return user.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
+							.collect(Collectors.toList());
+				}
+
+				@Override
+				public String getPassword() {
+					return user.getPassword();
+				}
+
+				@Override
+				public String getUsername() {
+					return user.getUsername();
+				}
+
+				@Override
+				public boolean isAccountNonExpired() {
+					return true;
+				}
+
+				@Override
+				public boolean isAccountNonLocked() {
+					return true;
+				}
+
+				@Override
+				public boolean isCredentialsNonExpired() {
+					return true;
+				}
+
+				@Override
+				public boolean isEnabled() {
+					return true;
+				}
+
+			}
+			
+		e. Next step is to make little changes in above step (Step3.3.c) like below code.
+		
+			@Autowired
+			private CustomUserDetailsService userDetailsService;
+
+			@Override
+			protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+				auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+			}
+			
+			@Bean
+			public BCryptPasswordEncoder passwordEncoder() {
+				return new BCryptPasswordEncoder();
+			}
+			
+Step 4: Secure Endpoints: To secure endpoints we need to follow below steps.
+	
+	a. By continuing from Step3, we have to override one more method "configure" with HttpSecurity input parameter from WebSecurityConfigurerAdapter class.
+	
+	b. Then secure endpoints based on your own business criteria.
+	
+	c. Example1: In this example we are securing all endpoints.
+
+			@Override
+			protected void configure(HttpSecurity http) throws Exception {
+				http.csrf().disable();
+				http.authorizeRequests().anyRequest().fullyAuthenticated().and().httpBasic();
+			}
+			
+	d. Example2: In this example we are securing only a specific endpoint, rest of the endpoints are accessible without any security.
+	
+			@Override
+			protected void configure(HttpSecurity http) throws Exception {
+				http.csrf().disable();
+				http.authorizeRequests().antMatchers("/profile/**").fullyAuthenticated().and().httpBasic();
+			}
+			
+	e. Example3: In this example we are securing only a specific endpoint but with a specific role of the user. To do so we have to do change from Step3 as well little bit. In this case only user "john" will be able to access "/admin" endpoint, however user "safdar" exists but it does not have role "ADMIN" so it cannot access "/admin" endpoint.
+	
+			@Override
+			protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+				auth.inMemoryAuthentication().withUser("safdar").password("{noop}safdar").roles("USER");
+				auth.inMemoryAuthentication().withUser("john").password("{noop}john").roles("ADMIN");
+			}
+			
+			@Override
+			protected void configure(HttpSecurity http) throws Exception {
+				http.csrf().disable();
+				http.authorizeRequests().antMatchers("/admin/**").hasRole("ADMIN").anyRequest().fullyAuthenticated().and().httpBasic();
+			}
+			
+	f. Example4: In this example we are securing endpoints based on users ROLE. First endpoint is not secured at all. Second endpoint is secured based on USER role only. And the third endpoint is accessible only for the user with role ADMIN.
+
+			@Override
+			protected void configure(HttpSecurity http) throws Exception {
+				http.csrf().disable();
+				http.authorizeRequests()
+					.antMatchers("/home/**").permitAll()
+					.antMatchers("/profile/**").access("hasRole('USER')")
+					.antMatchers("/user/**").access("hasRole('ADMIN')")
+				.and().httpBasic();
+			}
+			
+Optional Step4: Know your User: Sometime it is important to know who is using our services. It is important to track actvity or to generate reports for any other user. We can get username  at any given point of time either on controller layer or service layer. Example is given below.
+
+		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+		if(principal instanceof UserDetails) {
+			UserDetails userDetails = (UserDetails)principal;
+			System.out.println("username " + userDetails.getUsername());
+		}
+		else {
+			System.out.println("username " + principal.toString());
+		}
+	
+		
+		

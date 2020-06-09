@@ -1,0 +1,492 @@
+Spring Security Infogain Certification
+
+Part 1
+	Prerequisite for Application Development
+		
+		Prior Knowledge for this Session
+			• JSTL (JSP Standard Tag Library)
+			• Spring MVC
+			
+		Environment/Software required for this session
+			• STS 3.9.6 (IDE)
+			• Java 8.X Version installed
+			• Tomcat 8 installed
+			
+		Dependence's
+			• Spring 4.X RELEASE
+			• Spring Security 4.x.RELEASE
+			• JSTL 1.2 JAR
+			
+	Spring Security
+		
+		Spring Security
+			providing authentication and access control to secure Spring-based Java web application
+			targets Authentication and Authorization
+			Authentication is about validating your credentials
+			Authorization is the process to determine whether the authenticated user has access to the particular resources.
+			
+	Include Spring Security in your Project
+		
+		spring-security-core.jar
+			• This jar file is required for every application that wants to use Spring Security. This jar file includes core access-control and core authentication classes and interfaces.
+		
+		spring-security-web
+			• This jar is useful for Spring Security web authentication and URL-based access control. It includes filters and web-security infrastructure.
+			• All the classes and interfaces are located into the org.springframework.security.web package.
+		
+		Spring-security-config
+			• This jar file is required for Spring Security configuration using XML and Java both. It includes configuration code and security namespace parsing code. All the classes and interfaces are stored in org.springframework.security.config package.
+			
+	HTTP Authentication
+		
+		• HTTP Authentication
+			• HTTP supports the use of several authentication mechanisms to control access to pages and other resources.
+
+		• The most widely used HTTP authentication mechanisms are:
+			• Basic
+			• Digest
+			• Form Based Authentication
+			
+		Basic
+			• HTTP Basic Authentication, is based on a username and password. It is the authentication mechanism defined in the HTTP/1.0 specification. A web server requests a web client to authenticate the user.
+			• The client sends the username and password as unencrypted base64 encoded text in format username:password.
+			• In case of basic authentication, the username and password is only encoded with Base64, but not encrypted or hashed in any way.
+	
+		Form Based Authentication
+			• The look and feel of the 'login screen' cannot be varied using the web browser's built-in authentication mechanisms. This specification introduces a required form-based authentication mechanism which allows a Developer to CONTROL the LOOK and FEEL of the login screens.
+			• The web application deployment descriptor contains entries for a login form and error page. The login form must contain fields for entering a username and a password.
+			
+	Spring Context
+	
+		Spring application has types of context configuration files
+			• ApplicationContext (default name for this file is applicationContext.xml)
+			• WebApplicationContext (default name for this file is xxx-servlet.xml where xxx is the DispatcherServlet name in web.xml)
+			
+		ApplicationContext/Root Context
+			• applicationContext.xml is the root context configuration file for every web application.
+			• Spring loads applicationContext.xml file and creates the ApplicationContext for the whole application.
+			• There will be only one application context per web application.
+			• If you are not explicitly declaring the context configuration file name in web.xml using the contextConfigLocation , Spring will search for the applicationContext.xml under WEB-INF folder and throw FileNotFoundException if file not find.
+			• ContextLoaderListener performs the actual initialization work for the root application context.
+			• Security or other context will be loaded by ContextLoaderListener
+			
+		WebApplicationContext
+			• Apart from ApplicationContext, there can be multipleWebApplicationContext in a single web application.
+			• Each DispatcherServlet associated with single WebApplicationContext.
+			• xxx-servlet.xml file is specific to the DispatcherServlet and a web application can have more than one DispatcherServlet configured to handle the requests.
+			• In this scenario, each DispatcherServlet would have a separate xxx-servlet.xml configured. But, applicationContext.xml will be common for all the servlet configuration files.
+			
+		Bootstrapping Spring Security
+			• web.xml
+			
+			• Context Loader Listener
+				<listener>
+					<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+				</listener>
+				
+			• Specify the location and file name of security configuration file
+			
+			• Register the Spring Security Filter
+			
+		DelegatingFilterProxy
+			• It provides a hook into the Spring Security web infrastructure.
+			• It must be defined as a Spring bean in your application context. So you need to register a bean named as
+			"springSecurityFilterChain", which is an internal infrastructure bean created by spring container to handle web security.
+			• It is a application filter which is used to intercepting the HTTP requests and pass request to Spring authentication mechanism before being processed.
+			• This filter checks for the url pattern defined for it and passes all the requests matching that pattern to spring security mechanism.
+			• Once it is added to your web.xml, you're ready to use Web security services configured using the <http> element
+			• In the above case, pattern is /*, so all the requests will be filtered by this filter and pass through spring security mechanism.
+		
+	Spring Security Configuration Using Xml Configuration
+	
+		• Another XML file
+		• Create a spring-security.xml file and
+		• Configure Spring Security namespace
+			<beans:beans xmlns="http://www.springframework.org/schema/security"
+			xmlns:beans="http://www.springframework.org/schema/beans"
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+			http://www.springframework.org/schema/security
+			http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+			
+		• Add following elements inside security-config.xml
+			<http auto-config="true">
+				<intercept-url pattern="/profile/*" access="ROLE_ADMIN" />
+			</http>
+			<authentication-manager>
+				<authentication-provider>
+					<user-service>
+						<user name=“abc” password="password" authorities=" ROLE_ADMIN" " />
+					</user-service>
+				</authentication-provider>
+			</authentication-manager>
+			
+	Get Current Logged in Username in Spring Security
+		• UsernamePasswordAuthenticationToken Class
+			• Spring Security uses this class at runtime, to inject UsernamePasswordAuthenticationToken into the Principal interface.
+			• You can get username from Principal interface using getName() method inside the Controller class.
+
+Part 2
+	
+	SpringApplication
+		• The SpringApplication class provides a convenient way to bootstrap a Spring application that will be started from a main() method.
+		• It Create an appropriate ApplicationContext instance (depending on your classpath)
+			public static void main(String[] args) {
+				SpringApplication.run(MySpringConfiguration.class, args);
+			}
+			
+	@SpringBootApplication
+		• @Configuration : Tags the class which as a source of bean definitions for the application context.
+		• @EnableAutoConfiguration : Tells Spring Boot to start adding beans based on class path settings, other beans, and various property settings.
+		• @EnableWebMvc : For a Spring MVC app, but Spring Boot adds it automatically when it sees spring-webmvc on the class path. This flags the application as a web application and activates key behaviors such as setting up a DispatcherServlet.
+		• @ComponentScan : Tells Spring to look for other components, configurations, and services in the specified package allowing it to find the controllers.
+		
+	Starting Spring BOOT
+		• SpringApplication.run(App.class,args);
+			• This is a magical line which takes two argument one is the class name annoted with @SpringBootAppliction and another is command line argument.
+
+		• What @SpringBootAppliction does?
+			• Sets up the default configuration
+			• Starts Spring application context
+			• Performs class path scan
+			• Starts the Tomcat server
+			
+	Spring Web Security for Spring Boot
+		spring-boot-starter-security
+		
+		@EnableWebSecurity
+		WebSecurityConfigurerAdapter.
+		
+	• Add Below Maven Dependencies
+		• spring-boot-starter-parent: Provides useful Maven defaults.
+		• spring-boot-starter-web: includes all the dependencies required to create a web app. This will avoid lining up different spring common project versions.
+		• spring-boot-starter-tomcat: Enable an embedded Apache Tomcat instance, by default.
+		• tomcat-embed-jasper: provides support for .jsp file rendering.
+		• spring-boot-starter-security: Take care of all the required dependencies related to spring security.
+		
+	Java Configuration for Spring Security
+		• Java configuration was supported from Spring version 3.1.
+			• It is extended to Spring Security in Spring 3.2 version and is defined in a class annotated @Configuration.
+			• To use Spring Security in Spring Boot add below dependency in pom.xml.
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-security</artifactId>
+				</dependency>
+				
+		• Define Spring Security Configuration File
+			WebSecurityConfig.java
+				@Configuration
+				@EnableWebSecurity
+				public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+					Override Required Web Security Configuration Method
+				}
+
+		The Configuration class is annotated with
+			• This configuration creates a Servlet Filter known as the springSecurityFilterChain which is responsible for all the security (protecting the application URLs, validating submitted username and passwords, redirecting to the log in form, etc) within your application.
+			• @EnableWebSecurity to enable Spring web security support. This annotation is used to add necessary Spring security configuration.
+			• The WebSecurityConfigurerAdapter class allows you to override default spring security features with your custom requirements.
+			
+	HTTP Security
+		• To enable HTTP Security in Spring, we need to extend the WebSecurityConfigurerAdapter and Override the default configuration in the configure(HttpSecurity http) method:
+			protected void configure(HttpSecurity http) throws Exception {
+				http.authorizeRequests()
+				.anyRequest().authenticated()
+				.and().httpBasic();
+			}
+		
+		• The above default configuration makes sure any request to the application is authenticated with HTTP basic authentication.
+		
+		• HttpSecurity Class
+			• The HttpSecurity is similar to Spring Security's XML <http> element in the namespace configuration. It allows configuring web based security for specific http requests.
+			
+	Authorization with Roles
+		• Let's now configure some simple authorization on each URL using roles:
+			protected void configure(HttpSecurity http) throws Exception {
+				http.authorizeRequests()
+				.antMatchers("/", "/home").access("hasRole('USER')")
+				.antMatchers("/admin/**").hasRole("ADMIN")
+				.and()
+				.formLogin();
+			}
+			
+		• Notice how we're using both the type-safe API – hasRole – but also the expression-based API, via access.
+		
+		• authorizeRequests()
+			• Allows restricting access based upon the HttpServletRequest
+		
+		• antMatcher(String antPattern)
+			• Allows configuring the HttpSecurity to only be invoked when matching the provided ant pattern
+		
+		• formLogin()
+			• Specifies to support form-based authentication.
+	
+	Spring Security Form Login
+		• Form Login
+			• Spring Security generates a login page automatically, based on the features that are enabled and using standard values for the URL
+			which processes the submitted login:
+			http.authorizeRequests()
+			.anyRequest().authenticated()
+			.and().formLogin()
+			.loginPage("/login").permitAll();
+			}
+			
+		• Here the automatically generated login page is convenient to get up and running quickly.
+		
+		• This has several methods that we can use to configure the behavior of the form login:
+			• loginPage() The custom login page
+			• loginProcessingUrl() The url to submit the username and password to
+			• defaultSuccessUrl() The landing page after a successful login
+			• failureUrl() The landing page after an unsuccessful login
+			• usernameParameter: The username
+			• passwordParameter : The password
+			
+	Configuring Spring Security Login Page
+		• Further Configuring Spring Login
+			• It is suggested to override most of the defaults configuration in Spring Security to hide the fact that the application is secured with Spring Security and minimize the information a potential attacker knows about the application.
+			
+		The Login Page
+			• loginPage() method allows you to configure a custom login page
+			• http.formLogin() .loginPage("/loginpage")
+			
+		• If you don't specify this, Spring Security will generate a very basic Login Form at the /login URL
+		
+		• The POST URL for Login
+			• The default URL where the Spring Login will POST to trigger the authentication process is /login which used to be
+			/j_spring_security_check before Spring Security version 4.
+			• loginProcessingUrl () method allows you to override default login processing URL.
+	
+		• http.formLogin()
+			• .loginProcessingUrl("/performlogin")
+			
+		• The Landing Page on Success
+			• After a successful Login process, the user is redirected to a page – which by default is the root of the web application.
+			• You can override this using the defaultSuccessUrl() method:
+			• http.formLogin()
+				• .defaultSuccessUrl("/homepage")
+				
+		• The Landing Page on Failure
+			• Same as with the Login Page, the Login Failure Page is autogenerated by Spring Security at /login?error by default.
+			• You can override this using the failureUrl() method
+			• http.formLogin()
+				• .failureUrl("/loginError")
+	
+	Spring Security Logout functionality
+		• The logout() method of HttpSecurity class provides support for logout functionality.
+			@Configuration
+			@EnableWebSecurity
+			public class SecurityConfig extends WebSecurityConfigurerAdapter {
+				@Override
+				protected void configure(HttpSecurity http) throws Exception {
+					http.logout()
+				}
+			}
+		• The element enables the default logout mechanism which is configured to use /logout logout url from Spring Security 4.
+
+		• The JSP and the Logout Link
+			<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+			<html>
+				<head></head>
+				<body>
+					<a href="<c:url value="/logout" />">Logout</a>
+				</body>
+			</html>
+			
+		• logoutSuccessUrl() Method
+			• After the logout process is performed successfully, Spring Security will redirect the user to a specified page.
+			• By default, this is the root page (“/”) but this can be changed using logoutSuccessUrl() method.
+				.logout()
+				.logoutSuccessUrl("/login")
+				
+		• logoutUrl() Method
+			• Spring Security, default uses /logout URL to trigger the logout mechanism.
+			• It is, however, a good idea to change this default value, to make sure that no information is published about what framework
+			• is used to secure the application:
+				.logout()
+				.logoutUrl("/performlogout")
+				
+		• Invalidate HttpSession and Delete Cookies
+			• invalidateHttpSession() and deleteCookies("JSESSIONID") method control the session invalidation as well as a list of cookies to be deleted when the user logs out.
+				.logout()
+				.logoutUrl("/performlogout")
+				.invalidateHttpSession(true)
+				.deleteCookies("JSESSIONID")
+				
+	Spring Security Authentication Details Storage
+		• Authentication Details Can be stored either
+			• In memory or
+			• Inside database
+		• AuthenticationManagerBuilder Class
+			• Allows for easily building in memory authentication, LDAP authentication, JDBC based authentication, adding UserDetailsService, and adding Authentication Provider’s.
+
+		• Methods Details
+			• inMemoryAuthentication()
+				• This method add in memory authentication to the AuthenticationManagerBuilder and return a
+				InMemoryUserDetailsManagerConfigurer to allow customization of the in memory authentication.
+				
+		• Spring Security using In memory Authentication
+			• Store the user details inside Security Config file
+			@Configuration
+			@EnableWebSecurity
+			public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+				@Autowired
+				public void configure(AuthenticationManagerBuilder auth) throws Exception {
+					auth.inMemoryAuthentication()
+					.withUser("user").password("password").roles("USER")
+					.and()
+					.withUser("admin").password("password").roles("USER", "ADMIN");
+				}
+			}
+		
+Part 3
+	Get current logged in user in spring security
+		• The SecurityContext is used to store the details of the currently authenticated user, also known as a principle. So, if you have to get the username or any other user details, you need to get this SecurityContext first. The SecurityContextHolder is a helper class, which provide access to the security context.
+		
+		• How do you get the SecurityContext from the SecurityContextHolder?
+			• In order to get the current username, you first need a SecurityContext, which is obtained from SecurityContextHolder class getContext() method. This SecurityContext keep the user details in an Authentication object, which can be obtained by calling getAuthentication() method.
+			• Once you got the Authentication object, you can either cast into UserDetails or use it as it is. The UserDetails object is the one Spring Security uses to keep user-related information.
+	
+	How to get the current logged-in Username in Spring Security
+		• Here is the code to get the security context in Spring security and obtain the name of the currently logged in user:
+			
+			Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			if (principal instanceof UserDetails) {
+				String username = ((UserDetails)principal).getUsername();
+			} else {
+				String username = principal.toString();
+			}
+			
+		• The object returned by getContext() is an instance of the SecurityContext interface.
+		• This is the object that is stored in a thread-local storage.
+		• The getPrincipal() method normally return UserDetails object in Spring Security, which contains all the details of currently logged in user.
+		
+	Get current logged in user in Spring Security
+		• Using Principal Interface
+			• if you ever need to know the current logged-in user details, It is suggested to declare a dependency and let Spring provide you the Principal object, rather you querying for them and creating a tightly coupled system.
+				
+				@RequestMapping(value = "/username", method = RequestMethod.GET)
+				public String currentUserName(Principal principal) {
+					return principal.getName();
+				}
+				
+			• At runtime UsernamePasswordAuthenticationToken class , injects UsernamePasswordAuthenticationToken into the Principal interface.
+			• Using Principal getName() method you can get the username.
+			
+		• Alternatively you can also ask for the Authentication object instead of a Principal object
+			
+			@RequestMapping(value = "/username", method = RequestMethod.GET)
+			public String currentUserName(Authentication authentication) {
+				return authentication.getName();
+			}
+			
+	Spring Security using Database Authentication
+		• Spring Security using Database Authentication
+			• We need to store user and user roles inside tables
+			• Then register a bean which is type of DriverManagerDataSource inside Spring context
+			
+		• Declare DriverManagerDataSource Bean
+		
+			@Configuration
+			public class DataSouceConfig {
+				@Bean(name = "dataSource")
+				public DriverManagerDataSource dataSource() {
+					DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource();
+					driverManagerDataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
+					driverManagerDataSource.setUrl("jdbc:oracle:thin:@127.0.0.1:1521:XE");
+					driverManagerDataSource.setUsername(“dbuser");
+					driverManagerDataSource.setPassword(“dbpassword");
+					return driverManagerDataSource;
+				}
+			}
+			
+		• Autowire DriverManagerDataSource Bean inside web security config File
+			
+			@Configuration
+			@EnableWebSecurity
+			public class SecurityConfig extends WebSecurityConfigurerAdapter {
+				
+				@Autowired
+				DataSource dataSource;
+				
+				@Override
+				public void configure(AuthenticationManagerBuilder auth) throws Exception {
+					auth.jdbcAuthentication().dataSource(dataSource)
+					.usersByUsernameQuery("select username,password, enabled from logins where username=?")
+					.authoritiesByUsernameQuery("select l.username, r.role from logins l, roles r where l.login_id = r.login_id and l.username =?");
+				}
+			}
+		
+		• jdbcAuthentication()
+			• This method add JDBC authentication to the AuthenticationManagerBuilder and return a JdbcUserDetailsManagerConfigurer to allow customization of the JDBC authentication by setting dataSource object etc.
+		
+		• dataSource(DataSource dataSource)
+			• Populates the DataSource to be used.
+		
+		• usersByUsernameQuery(String query)
+			• Sets the query to be used for finding a user by their username.
+		
+		• authoritiesByUsernameQuery(String query)
+			• Sets the query to be used for finding a user's authorities by their username.		
+			
+	Creating Users Programmatically using JdbcUserDetailsManager
+	
+		• What is UserDetailsService interface ?
+			• UserDetailsService is used to load user-specific data. either in-memory authentication which uses InMemoryUserDetailsManager class or JDBC authentication which uses JdbcUserDetailsManager class. Both of which are implementations of UserDetailsService.
+			
+		• JdbcUserDetailsManager Class
+			• Spring Security’s JdbcUserDetailsManager class uses the database to store and retrieve the user information.
+			• The JdbcUserDetailsManager class allows us to perform (CRUD) operations on the user details stored in the database.
+			• All the user request will be filtered and passed to AuthenticationManager, the AuthenticationManager authenticates the users
+			by requesting the user details from the UserDetailsService interface.
+			• The UserDetailsService is responsible for providing the valid user details to the AuthenticationManager.
+			• Now it is the responsibility of JdbcUserDetailsManager to retrieve the user details from the database and load the UserDetails by
+			calling the loadUserByUsername() method.
+			• Once the UserDetails is loaded via JdbcUserDetailsManager and the authentication is successful, the SecurityContext will be
+			updated
+			
+	Some commonly used Method JdbcUserDetailsManager Class
+	
+		• void createUser(UserDetails user)
+			• Create a new user with the supplied details.
+		
+		• void changePassword(String oldPassword, String newPassword)
+			• Modify the current user's password.
+		
+		• void deleteUser(String username)
+			• Remove the user with the given login name from the system.
+		
+		• void updateUser(UserDetails user)
+			• Update the specified user.
+		
+		• Boolean userExists(String username)
+			• Check if a user with the supplied login name exists in the system.
+			
+	Steps required to create users Programmatically using JdbcUserDetailsManager
+		• Step1: Create a POJO class having username and password properties with setter/getter methods.
+		• Step2: Design registration.jsp page
+		• Step3: Register a JdbcUserDetailsManager Bean inside security configuration file.
+		• Step4: Autowire JdbcUserDetailsManager Bean Inside the controller
+		• Step5: Create appropriate authorities using SimpleGrantedAuthority class which is implementation of GrantedAuthority interface.
+		• Step6: Create a User object containing username , password and authorities.
+		• Step7 : Create a new user with the supplied details using createUser(UserDetails user) method of JdbcUserDetailsManager Class.
+		
+	Password Encoding using BCrypt
+		• What is Password Encoding?
+			• It is the process of hashing password before storing it inside database. Instead of storing passwords in plain text format. Which is not secured
+			• In the old days, normally, we used MD5 Md5PasswordEncoder or SHA ShaPasswordEncoder hashing algorithm to encode a
+			password you are still allowed to use whatever encoder you like, but Spring recommends to use BCryptPasswordEncoder.
+			• Spring Security provides BCryptPasswordEncoder class , which is implementation of Spring’s PasswordEncoder interface that uses the BCrypt strong hashing function with randomly generated salt to encode the password.
+			
+		• Where all possibly do we need Password Encoding in application?
+			• During password comparison. Encode input password before comparing with the one stored in database.
+			• During New user creation/existing user password updation. Encode the new input password before saving/updating in database.
+			
+		• Some commonly used Method BCryptPasswordEncoder class
+			• String encode(CharSequence rawPassword)
+				• Encode the raw password.
+			• boolean matches(CharSequence rawPassword, String encodedPassword)
+				• Verify the encoded password obtained from storage matches the submitted raw password after it too is encoded.
+				
+		• Steps to Implement Password Encoding Using Bcrypt
+			• Step 1 Register a PasswordEncoder bean inside SecurityConfiguration file
+			• Step 2 Autowire PasswordEncoder bean inside controller and use it for encoding the password and then store to Database using JdbcUserDetailsManager createUser(user) method.
